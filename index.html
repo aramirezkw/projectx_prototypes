@@ -232,14 +232,23 @@ document.addEventListener('DOMContentLoaded', async function() {
   // are emitted only mid-drag — no <html> classes needed.
   function buildCSS(open) {
     var w = Math.round(curW) + 'px';
-    var css = PANEL_SEL + '{width:' + w + '!important}';
-    if (open) css += MAIN_SEL + '{margin-right:' + w + '!important}';
+    // Smoother, slightly slower open/close: gentle ease-out, ~0.45s. `width` is
+    // deliberately excluded so dragging the panel stays instant (no lag).
+    var EASE = 'cubic-bezier(.22,1,.36,1)';
+    var PANEL_TRANS = 'transition:transform .45s ' + EASE + ',opacity .42s ' + EASE
+      + ',top .45s ' + EASE + ',height .45s ' + EASE + ',border-radius .45s ' + EASE + '!important';
+    var css = PANEL_SEL + '{width:' + w + '!important;' + PANEL_TRANS + '}';
+    if (open) css += MAIN_SEL + '{margin-right:' + w + '!important;transition:margin-right .45s ' + EASE + '!important}';
     if (dragging) css += PANEL_SEL + ',' + MAIN_SEL + '{transition:none!important}';
-    css += '.kwiq-resize-handle{position:absolute;top:0;left:0;width:8px;height:100%;'
-      + 'cursor:col-resize;z-index:60;touch-action:none;background:transparent;'
-      + 'opacity:0;transition:opacity .15s,background .15s}'
-      + '.kwiq-resize-handle:hover{opacity:.4;background:' + ACCENT + '}';
-    if (dragging) css += '.kwiq-resize-handle{opacity:.6;background:' + ACCENT + '}';
+    // 12px invisible grab area; a centered 4x32 rounded grip pill fades in on
+    // hover (subtle), turning teal while actively dragging.
+    css += '.kwiq-resize-handle{position:absolute;top:0;left:0;width:12px;height:100%;'
+      + 'cursor:col-resize;z-index:60;touch-action:none;background:transparent}'
+      + '.kwiq-resize-handle::after{content:"";position:absolute;top:50%;left:50%;'
+      + 'transform:translate(-50%,-50%);width:4px;height:32px;border-radius:999px;'
+      + 'background:rgba(0,0,0,.3);opacity:0;transition:opacity .15s,background .15s}'
+      + '.kwiq-resize-handle:hover::after{opacity:1}';
+    if (dragging) css += '.kwiq-resize-handle::after{opacity:1;background:' + ACCENT + '}';
     // Slim, subtle scrollbar for the dashboard column (default chunky bar sits
     // right in the gutter next to the panel).
     css += 'main{scrollbar-width:thin;scrollbar-color:rgba(0,0,0,.18) transparent}'
